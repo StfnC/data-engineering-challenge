@@ -20,29 +20,49 @@ class MuseumScraper:
     def create_museums_list(self, year: int = 2019):
         table = self.__find_year_table(year)
 
-        table_data = []
+        clean_table_data = []
 
         for row in table:
-            table_data.append(self.__extract_relevant_data_from_row(row))
+            clean_table_data.append(self.__extract_relevant_data_from_row(row))
 
-        df = DataFrame(table_data)
+        df = DataFrame(clean_table_data)
 
-        print(df)
+        df.to_csv(f"museum_visits/{year}.csv", index=False)
 
         return df
 
     # FIXME: Add type hinting
     def __extract_relevant_data_from_row(self, row):
-        # TODO: Extract the data from the row
-        return {"a": "b"}
+        row_data = {}
 
+        museum_name_table_data = row.td
+
+        row_data["name"] = museum_name_table_data.a.text
+
+        location_table_data = museum_name_table_data.next_sibling.next_sibling
+
+        row_data["country"] = location_table_data.span.a["title"]
+
+        row_data["city"] = location_table_data.find_all("a")[-1].text
+
+        visits_table_data = location_table_data.next_sibling.next_sibling
+
+        visits_text = visits_table_data.text.split("[")[0]
+
+        visits = int("".join(visits_text.split(",")))
+
+        row_data["visits"] = visits
+
+        return row_data
+
+    # FIXME: Add comment explaining the way the page is structured
     def __find_year_table(self, year: int = 2019) -> ResultSet:
         year_span = self.soup.find(id=str(year))
 
         if not year_span:
             return None
 
-        return year_span.parent.next_sibling.next_sibling.find_all("tr")
+        return year_span.parent.next_sibling.next_sibling.find_all("tr")[1:]
 
 
 if __name__ == "__main__":
