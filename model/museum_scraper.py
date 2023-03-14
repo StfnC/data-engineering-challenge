@@ -4,8 +4,12 @@ from bs4.element import ResultSet
 from pandas import DataFrame
 from typing import Callable
 
+from constants import DEFAULT_YEAR, MUSEUMS_FOLDER
+
 # FIXME: Add error handling
 # Inspired by: https://www.freecodecamp.org/news/scraping-wikipedia-articles-with-python/
+
+
 class MuseumScraper:
     WIKI_BASE_URL = "https://en.wikipedia.org"
     MUSEUMS_PATH = "/wiki/List_of_most-visited_museums"
@@ -22,7 +26,7 @@ class MuseumScraper:
         self.soup: BeautifulSoup = BeautifulSoup(
             response.content, "html.parser")
 
-    def create_museums_list(self, year: int = 2019) -> DataFrame:
+    def create_museums_list(self, year: int = DEFAULT_YEAR) -> DataFrame:
         table = self.__find_year_table(year)
 
         clean_table_data = []
@@ -32,7 +36,7 @@ class MuseumScraper:
 
         df = DataFrame(clean_table_data)
 
-        df.to_csv(f"museum_visits/{year}.csv", index=False)
+        df.to_csv(f"{MUSEUMS_FOLDER}{year}.csv", index=False)
 
         return df
 
@@ -75,16 +79,18 @@ class MuseumScraper:
 
         soup = BeautifulSoup(response.content, "html.parser")
 
-        string_contains_iso_norm: Callable[[str], bool] = lambda s: s and s.startswith("ISO 3166-2:")
+        string_contains_iso_norm: Callable[[
+            str], bool] = lambda s: s and s.startswith("ISO 3166-2:")
 
-        country_code = soup.find(name="a", attrs={"title": string_contains_iso_norm}).text.lower()
+        country_code = soup.find(
+            name="a", attrs={"title": string_contains_iso_norm}).text.lower()
 
         self.__country_codes[country] = country_code
 
         return self.__country_codes[country]
 
     # FIXME: Add comment explaining the way the page is structured
-    def __find_year_table(self, year: int = 2019) -> ResultSet:
+    def __find_year_table(self, year: int = DEFAULT_YEAR) -> ResultSet:
         year_span = self.soup.find(id=str(year))
 
         if not year_span:
