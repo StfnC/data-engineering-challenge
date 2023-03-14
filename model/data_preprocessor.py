@@ -27,6 +27,8 @@ class DataPreprocessor:
         '''
         museums_df = self.__get_museums_dataframe()
 
+        museums_df = museums_df.loc[museums_df["visits"] > self.__min_visits]
+
         print(museums_df)
 
     def __get_museums_dataframe(self) -> pd.DataFrame:
