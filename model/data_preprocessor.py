@@ -3,6 +3,7 @@ import os
 import pandas as pd
 
 from constants import DEFAULT_MIN_VISITORS, DEFAULT_YEAR, MUSEUMS_FOLDER
+from grouping_strategy import GroupingStrategy
 from museum_scraper import MuseumScraper
 
 
@@ -11,9 +12,7 @@ class DataPreprocessor:
         self.__year = year
         self.__min_visits = min_visits
 
-    # TODO: Create an Abstract GroupingStrategy class to be able
-    #  to add new strategies and change them on the fly without changing DataPreprocessor
-    def get_population_and_visits(self, grouping_strategy: str = "average") -> pd.DataFrame:
+    def get_population_and_visits(self, grouping_strategy: GroupingStrategy = GroupingStrategy.AVERAGE) -> pd.DataFrame:
         '''
         Load museum data 
         Remove museums with less than min_visits
@@ -25,11 +24,15 @@ class DataPreprocessor:
         Join the museum visits and the population based on the city and country
         Return only the columns required for the linear regression: ['population', 'visitors']
         '''
+        self.__grouping_strategy = grouping_strategy
+
         museums_df = self.__get_museums_dataframe()
 
         museums_df = museums_df.loc[museums_df["visits"] > self.__min_visits]
 
-        print(museums_df)
+        museums_grouped_by_city = self.__group_by_city(museums_df)
+
+        print(museums_grouped_by_city)
 
     def __get_museums_dataframe(self) -> pd.DataFrame:
         museums_file_path = f"{MUSEUMS_FOLDER}{self.__year}.csv"
@@ -44,8 +47,23 @@ class DataPreprocessor:
 
         return museums_df
 
+    # TODO: Create an Abstract GroupingStrategy class to be able
+    #  to add new strategies and change them on the fly without changing DataPreprocessor
+    def __group_by_city(self, museums: pd.DataFrame) -> pd.DataFrame:
+        museums_grouped_by_city = None
+
+        if self.__grouping_strategy == GroupingStrategy.AVERAGE:
+            museums_grouped_by_city = museums.groupby(
+                ["country", "city"]).mean()
+        elif self.__grouping_strategy == GroupingStrategy.SUM:
+            museums_grouped_by_city = museums.groupby(
+                ["country", "city"]).sum()
+
+        return museums_grouped_by_city
+
 
 if __name__ == "__main__":
     data_preprocessor = DataPreprocessor()
 
     data_preprocessor.get_population_and_visits()
+    data_preprocessor.get_population_and_visits(GroupingStrategy.SUM)
