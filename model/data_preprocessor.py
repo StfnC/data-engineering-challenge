@@ -2,7 +2,7 @@ import os
 
 import pandas as pd
 
-from constants import DEFAULT_MIN_VISITORS, DEFAULT_YEAR, MUSEUMS_FOLDER
+from constants import CITIES_FOLDER, DEFAULT_MIN_VISITORS, DEFAULT_YEAR, MUSEUMS_FOLDER
 from grouping_strategy import GroupingStrategy
 from museum_scraper import MuseumScraper
 
@@ -32,7 +32,11 @@ class DataPreprocessor:
 
         museums_grouped_by_city = self.__group_by_city(museums_df)
 
+        city_populations = self.__get_city_populations()
+
         print(museums_grouped_by_city)
+
+        print(city_populations.head())
 
     def __get_museums_dataframe(self) -> pd.DataFrame:
         museums_file_path = f"{MUSEUMS_FOLDER}{self.__year}.csv"
@@ -60,6 +64,29 @@ class DataPreprocessor:
                 ["country", "city"]).sum()
 
         return museums_grouped_by_city
+
+    def __get_city_populations(self) -> pd.DataFrame:
+        world_cities_path = f"{CITIES_FOLDER}worldcitiespop.csv"
+
+        if not os.path.isfile(world_cities_path):
+            # FIXME: Maybe raise an exception?
+            print("Please download the world cities population dataset at https://www.kaggle.com/max-mind/world-cities-database")
+            return None
+
+        dtypes = {
+            "Country": "string",
+            "City": "string",
+            "AccentCity": "string",
+            "Population": float
+        }
+
+        city_populations = pd.read_csv(world_cities_path, dtype=dtypes, usecols=[
+                                       "Country", "City", "AccentCity", "Population"])
+
+        city_populations = city_populations[city_populations["Population"].notna(
+        )]
+
+        return city_populations
 
 
 if __name__ == "__main__":
