@@ -56,7 +56,8 @@ class MuseumScraper:
 
         row_data["country"] = self.__get_country_code(country_name)
 
-        row_data["city"] = location_table_data.find_all("a")[-1].text
+        row_data["city"] = location_table_data.find_all(
+            "a")[-1].text.split(',')[0]
 
         visits_table_data = location_table_data.next_sibling.next_sibling
 
