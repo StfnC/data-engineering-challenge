@@ -54,9 +54,9 @@ class DataPreprocessor:
             ["country", "city"], as_index=False)
 
         if self.__grouping_strategy == GroupingStrategy.AVERAGE:
-            museums_grouped_by_city = museums_grouped_by_city.mean()
+            museums_grouped_by_city = museums_grouped_by_city.mean(numeric_only=True)
         elif self.__grouping_strategy == GroupingStrategy.SUM:
-            museums_grouped_by_city = museums_grouped_by_city.sum()
+            museums_grouped_by_city = museums_grouped_by_city.sum(numeric_only=True)
 
         return museums_grouped_by_city
 
