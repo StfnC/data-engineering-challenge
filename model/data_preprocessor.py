@@ -32,11 +32,7 @@ class DataPreprocessor:
 
         museums_grouped_by_city = self.__group_by_city(museums_df)
 
-        city_populations = self.__get_city_populations()
-
         print(museums_grouped_by_city)
-
-        print(city_populations.head())
 
     def __get_museums_dataframe(self) -> pd.DataFrame:
         museums_file_path = f"{MUSEUMS_FOLDER}{self.__year}.csv"
@@ -54,14 +50,13 @@ class DataPreprocessor:
     # TODO: Create an Abstract GroupingStrategy class to be able
     #  to add new strategies and change them on the fly without changing DataPreprocessor
     def __group_by_city(self, museums: pd.DataFrame) -> pd.DataFrame:
-        museums_grouped_by_city = None
+        museums_grouped_by_city = museums.groupby(
+            ["country", "city"], as_index=False)
 
         if self.__grouping_strategy == GroupingStrategy.AVERAGE:
-            museums_grouped_by_city = museums.groupby(
-                ["country", "city"]).mean()
+            museums_grouped_by_city = museums_grouped_by_city.mean()
         elif self.__grouping_strategy == GroupingStrategy.SUM:
-            museums_grouped_by_city = museums.groupby(
-                ["country", "city"]).sum()
+            museums_grouped_by_city = museums_grouped_by_city.sum()
 
         return museums_grouped_by_city
 
