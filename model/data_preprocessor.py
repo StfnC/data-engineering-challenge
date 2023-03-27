@@ -13,17 +13,6 @@ class DataPreprocessor:
         self.__min_visits = min_visits
 
     def get_population_and_visits(self, grouping_strategy: GroupingStrategy = GroupingStrategy.AVERAGE) -> pd.DataFrame:
-        '''
-        Load museum data 
-        Remove museums with less than min_visits
-        Group museums in the same city by one of the following strategies:
-            Average
-                Take the average of the museum visits
-            Sum
-                Add all the museum visits
-        Join the museum visits and the population based on the city and country
-        Return only the columns required for the linear regression: ['population', 'visitors']
-        '''
         self.__grouping_strategy = grouping_strategy
 
         museums_df = self.__get_museums_dataframe()
@@ -32,7 +21,18 @@ class DataPreprocessor:
 
         museums_grouped_by_city = self.__group_by_city(museums_df)
 
-        print(museums_grouped_by_city)
+        city_populations = self.__get_city_populations()
+
+        city_populations = city_populations.rename(
+            columns={'City': 'city', 'Country': 'country', 'Population': 'population'})
+
+        museums_grouped_by_city['city'] = museums_grouped_by_city['city'].apply(
+            lambda city: city.lower())
+
+        grouped_data = pd.merge(museums_grouped_by_city,
+                                city_populations, on=['city', 'country'])
+
+        return grouped_data[['city', 'country', 'visits', 'population']]
 
     def __get_museums_dataframe(self) -> pd.DataFrame:
         museums_file_path = f"{MUSEUMS_FOLDER}{self.__year}.csv"
@@ -88,4 +88,3 @@ if __name__ == "__main__":
     data_preprocessor = DataPreprocessor()
 
     data_preprocessor.get_population_and_visits()
-    data_preprocessor.get_population_and_visits(GroupingStrategy.SUM)
